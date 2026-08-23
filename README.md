@@ -9,4 +9,8 @@ KøkkenAlf er tænkt som en rolig, familievenlig køkkenhjælper.
 - Indkøbsliste med afkrydsning
 - Første version af “Hjælp mig”
 - Mobile-first design
-- Rolig KøkkenAlf-stil
+- Ny app-agtig navigation og køkken-Alf
+- Farverig, kompakt forside
+
+## Designopdatering
+Denne commit tvinger en ny GitHub Pages-deployment af den aktuelle version af appen.
