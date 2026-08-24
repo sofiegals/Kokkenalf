@@ -22,25 +22,25 @@ const pantryOptions = [
 
 const helpOptions = {
   energy: [
-    { value: 'low', label: 'Jeg har ikke meget energi', emoji: '🫶' },
+    { value: 'low', label: 'Jeg er helt flad', emoji: '🫶' },
     { value: 'okay', label: 'Jeg har lidt overskud', emoji: '🙂' },
     { value: 'good', label: 'Jeg har fint overskud', emoji: '✨' },
   ],
   time: [
-    { value: 'quick', label: 'Helst under 20 min', emoji: '⚡' },
+    { value: 'quick', label: 'Helst 20 min eller mindre', emoji: '⚡' },
     { value: 'normal', label: '20–35 min er fint', emoji: '⏱️' },
-    { value: 'slow', label: 'Jeg vil gerne hygge mig med det', emoji: '🍳' },
+    { value: 'slow', label: 'Jeg vil gerne hygge mig', emoji: '🍳' },
   ],
   mood: [
     { value: 'cozy', label: 'Noget trygt og hyggeligt', emoji: '🥰' },
     { value: 'fresh', label: 'Noget let og friskt', emoji: '🌿' },
-    { value: 'fun', label: 'Noget sjovt for børnene', emoji: '🎉' },
+    { value: 'fun', label: 'Noget børnene vil elske', emoji: '🎉' },
   ],
 };
 
 type HelpChoice = { energy: string; time: string; mood: string; pantry: string[] };
-
 type NavItem = { key: string; icon: string; label: string; hint: string };
+
 const navItems: NavItem[] = [
   { key: 'plan', icon: '📅', label: 'Madplan', hint: 'Hvad skal vi spise?' },
   { key: 'recipes', icon: '🍲', label: 'Opskrifter', hint: 'Find noget lækkert' },
@@ -72,9 +72,7 @@ export default function App() {
   const [shopping, setShopping] = useState(initialShopping.map((name) => ({ name, done: false })));
   const [helpOpen, setHelpOpen] = useState(false);
 
-  const toggleShopping = (index: number) => {
-    setShopping((items) => items.map((item, i) => i === index ? { ...item, done: !item.done } : item));
-  };
+  const toggleShopping = (index: number) => setShopping((items) => items.map((item, i) => i === index ? { ...item, done: !item.done } : item));
 
   return (
     <div className="app">
@@ -164,6 +162,33 @@ function PantryStep({ selected, onToggle, onContinue }: { selected: string[]; on
 }
 
 function getRecommendation({ energy, time, mood, pantry }: HelpChoice) {
-  const ranked = recipes.map((recipe) => { const matching = recipe.ingredients.filter((ingredient) => pantry.includes(ingredient)); let score = matching.length * 3; if (recipe.mood === mood) score += 3; if (time === 'quick' && recipe.time === '20 min') score += 3; if (time === 'normal' && recipe.time !== '20 min') score += 2; if (time === 'slow' && recipe.time === '35 min') score += 3; if (energy === 'low' && recipe.effort === 'easy') score += 2; return { recipe, matching, score }; }).sort((a, b) => b.score - a.score);
-  const best = ranked[0]; const usedLabels = best.matching.map((item) => pantryOptions.find((option) => option.value === item)?.label || item); let text = `${best.recipe.title} passer godt til i dag. `; if (best.matching.length > 0) text += `Og du kan allerede bruge ${usedLabels.join(' og ')} fra det, du har hjemme.`; else text += 'KøkkenAlf har valgt en enkel løsning, så du ikke skal tænke for meget over aftensmaden.'; return { ...best.recipe, text, used: usedLabels };
+  const ranked = recipes.map((recipe) => {
+    const matching = recipe.ingredients.filter((ingredient) => pantry.includes(ingredient));
+    let score = matching.length * 5;
+
+    if (recipe.mood === mood) score += 4;
+    if (energy === 'low' && recipe.effort === 'easy') score += 5;
+    if (energy === 'good' && recipe.effort === 'medium') score += 2;
+    if (time === 'quick' && recipe.time === '20 min') score += 5;
+    if (time === 'normal' && ['25 min', '30 min'].includes(recipe.time)) score += 4;
+    if (time === 'slow' && recipe.time === '35 min') score += 5;
+    if (mood === 'fun' && recipe.tag === 'Børnene elsker') score += 5;
+
+    return { recipe, matching, score };
+  }).sort((a, b) => b.score - a.score);
+
+  const best = ranked[0];
+  const usedLabels = best.matching.map((item) => pantryOptions.find((option) => option.value === item)?.label || item);
+
+  let reason = 'Jeg har valgt noget, der passer til det, du fortalte mig.';
+  if (best.matching.length > 0) reason = `Du kan allerede bruge ${usedLabels.join(' og ')} – så er der lidt mindre at handle ind.`;
+  else if (energy === 'low') reason = 'Du sagde, at energien er lav, så jeg har valgt en nem løsning med mindst muligt bøvl.';
+  else if (time === 'quick') reason = 'Du bad om noget hurtigt, så jeg har holdt mig til en rigtig hurtig hverdagsret.';
+  else if (mood === 'fun') reason = 'Du havde lyst til noget sjovt, så jeg fandt en ret, der plejer at være et hit hos børnene.';
+
+  return {
+    ...best.recipe,
+    used: usedLabels,
+    text: `${best.recipe.title} passer godt til i dag. ${reason}`,
+  };
 }
