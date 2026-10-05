@@ -1,4 +1,5 @@
 import React,{useEffect,useMemo,useState} from 'react';
+import './AppNext.css';
 type Category='Mejeri'|'Grønt & frugt'|'Protein'|'Kolonial'|'Brød & morgenmad'|'Øvrigt';
 type Ingredient={id:string;name:string;emoji:string;category:Category};
 type Recipe={id:number;title:string;time:number;tag:string;emoji:string;ingredients:string[];steps:string[]};
